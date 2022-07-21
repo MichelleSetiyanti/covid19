@@ -1,22 +1,18 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import '../widgets/SummaryItem.dart';
 import 'package:http/http.dart' as http;
-import 'package:covid19/models/summary.dart';
+import 'package:covid19/models/update.dart';
 
 class PagePertama extends StatelessWidget {
-  late Summary dataSummary;
+  const PagePertama({Key? key}) : super(key: key);
 
-  Future getSummary() async {
+  Future<Covid> getSummary() async {
     var response = await http.get(
       Uri.parse("https://data.covid19.go.id/public/api/update.json"),
     );
-    // print(response.body);
-    var data = json.decode(response.body) as Map<String, dynamic>;
-    dataSummary = Summary.fromJson(data);
-    // print(dataSummary.confirmed.value);
+    return Covid.fromJson(jsonDecode(response.body));
   }
 
   @override
@@ -46,7 +42,7 @@ class PagePertama extends StatelessWidget {
                       search(),
                       FutureBuilder(
                         future: getSummary(),
-                        builder: (context, snapshot) {
+                        builder: (context, AsyncSnapshot<Covid?> snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
                             return const Center(
@@ -60,21 +56,37 @@ class PagePertama extends StatelessWidget {
                             children: [
                               SummaryItem(
                                 "CONFIRMED",
-                                "${dataSummary.confirmed.value}",
-                                Icon(Icons.person_add_alt_sharp,
-                                    color: Colors.white),
+                                "${snapshot.data?.update.total.jumlahPositif}",
+                                const Icon(
+                                  Icons.person_add_alt_sharp,
+                                  color: Colors.white,
+                                ),
                                 Colors.amber,
                               ),
                               SummaryItem(
                                 "DEATHS",
-                                "${dataSummary.deaths.value}",
-                                Icon(Icons.person_off_sharp,
+                                "${snapshot.data?.update.total.jumlahMeninggal}",
+                                const Icon(Icons.person_off_sharp,
                                     color: Colors.white),
-                                Color.fromARGB(255, 51, 230, 212),
+                                const Color.fromARGB(255, 51, 230, 212),
                               ),
                             ],
                           );
                         },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Container(
+                          width: double.infinity,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white,
+                            // boxShadow: [
+                            //   BoxShadow(color: Colors.green, spreadRadius: 1),
+                            // ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -132,7 +144,7 @@ Widget search() {
                 color: Colors.indigo[900],
               ),
               isDense: true,
-              contentPadding: EdgeInsets.all(0),
+              contentPadding: const EdgeInsets.all(0),
             ),
             textAlignVertical: TextAlignVertical.center,
           ),
